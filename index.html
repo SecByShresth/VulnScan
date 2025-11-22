@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Enterprise-grade ephemeral vulnerability scanner - Analyze your system inventory for security vulnerabilities using MSRC, OSV.dev, and CISA KEV databases. 100% client-side, zero data storage.">
+    <meta name="keywords"
+        content="vulnerability scanner, security analysis, CVE, MSRC, OSV, CISA KEV, ephemeral security">
+    <meta name="author" content="Vulnerability Scanner">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Ephemeral Vulnerability Scanner">
+    <meta property="og:description" content="Enterprise-grade client-side vulnerability analysis engine">
+    <meta property="og:type" content="website">
+
+    <title>Ephemeral Vulnerability Scanner | Enterprise Security Analysis</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.ico">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Background Effects -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <div class="logo-text">
+                        <h1>VulnScan</h1>
+                        <span class="logo-subtitle">Ephemeral Security Analysis</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <!-- Theme Toggle Button -->
+                    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Toggle theme">
+                        <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" />
+                            <path
+                                d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <div class="header-badge">
+                        <span class="badge-dot"></span>
+                        <span>100% Client-Side • Zero Storage</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Privacy Notice -->
+            <div class="privacy-notice" id="privacyNotice">
+                <div class="privacy-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="privacy-content">
+                    <h3>🔒 Privacy-First Architecture</h3>
+                    <p>All analysis happens locally in your browser. Your inventory files never leave your device. No
+                        cookies, no tracking, no data storage. Everything disappears on page refresh.</p>
+                </div>
+                <button class="privacy-close" onclick="closePrivacyNotice()">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Step 1: OS Selection -->
+            <section class="card wizard-step active" id="step1">
+                <div class="card-header">
+                    <div class="step-indicator">
+                        <span class="step-number">1</span>
+                        <div class="step-info">
+                            <h2>Select Operating System</h2>
+                            <p>Choose your system type to generate the appropriate inventory command</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="os-selector">
+                        <div class="os-option" data-os="windows" onclick="selectOS('windows')">
+                            <div class="os-icon">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 5.5L11 4V11.5H3V5.5Z" fill="currentColor" />
+                                    <path d="M11 12.5V20L3 18.5V12.5H11Z" fill="currentColor" />
+                                    <path d="M12 4L21 2.5V11.5H12V4Z" fill="currentColor" />
+                                    <path d="M12 12.5H21V21.5L12 20V12.5Z" fill="currentColor" />
+                                </svg>
+                            </div>
+                            <div class="os-info">
+                                <h3>Windows</h3>
+                                <p>PowerShell-based inventory</p>
+                                <span class="os-badge">MSRC CSAF API</span>
+                            </div>
+                            <div class="os-check">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="os-option" data-os="linux" onclick="selectOS('linux')">
+                            <div class="os-icon">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M12 2C12 2 8 4 8 8C8 10 9 11 9 13C9 15 8 16 7 17C6 18 5 19 5 21H19C19 19 18 18 17 17C16 16 15 15 15 13C15 11 16 10 16 8C16 4 12 2 12 2Z"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path
+                                        d="M9 21C9 21.5304 9.21071 22.0391 9.58579 22.4142C9.96086 22.7893 10.4696 23 11 23H13C13.5304 23 14.0391 22.7893 14.4142 22.4142C14.7893 22.0391 15 21.5304 15 21"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                            <div class="os-info">
+                                <h3>Linux / macOS / Unix</h3>
+                                <p>Package manager inventory</p>
+                                <span class="os-badge">OSV.dev API</span>
+                            </div>
+                            <div class="os-check">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Command Instructions -->
+                    <div class="command-section" id="commandSection" style="display: none;">
+                        <div class="command-header">
+                            <h3>Generate System Inventory</h3>
+                            <p id="commandDescription"></p>
+                        </div>
+
+                        <div class="command-tabs" id="commandTabs"></div>
+
+                        <div class="command-block">
+                            <div class="command-toolbar">
+                                <span class="command-label" id="commandLabel"></span>
+                                <button class="btn-copy" onclick="copyCommand()" id="copyBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path
+                                            d="M5 15H4C3.46957 15 2.96086 14.7893 2.58579 14.4142C2.21071 14.0391 2 13.5304 2 13V4C2 3.46957 2.21071 2.96086 2.58579 2.58579C2.96086 2.21071 3.46957 2 4 2H13C13.5304 2 14.0391 2.21071 14.4142 2.58579C14.7893 2.96086 15 3.46957 15 4V5"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code id="commandCode"></code></pre>
+                        </div>
+
+                        <div class="info-box">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <div>
+                                <strong>Next Step:</strong>
+                                <p>Run this command on your system, then upload the generated file below.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary btn-large" id="continueBtn" onclick="goToStep2()" style="display: none;">
+                        Continue to Upload
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 2: File Upload & Analysis -->
+            <section class="card wizard-step" id="step2">
+                <div class="card-header">
+                    <div class="step-indicator">
+                        <span class="step-number">2</span>
+                        <div class="step-info">
+                            <h2>Upload & Analyze</h2>
+                            <p>Upload your system inventory file for vulnerability analysis</p>
+                        </div>
+                    </div>
+                    <button class="btn-secondary btn-small" onclick="goToStep1()">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Back
+                    </button>
+                </div>
+
+                <div class="card-body">
+                    <!-- File Upload Zone -->
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept=".json,.txt" style="display: none;"
+                            onchange="handleFileSelect(event)">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <h3>Drop your inventory file here</h3>
+                        <p>or click to browse</p>
+                        <span class="upload-formats">Supports .json and .txt files</span>
+                    </div>
+
+                    <!-- File Info (shown after selection) -->
+                    <div class="file-info" id="fileInfo" style="display: none;">
+                        <div class="file-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9L13 2Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M13 2V9H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="file-details">
+                            <h4 id="fileName"></h4>
+                            <p id="fileSize"></p>
+                        </div>
+                        <button class="btn-icon" onclick="clearFile()" title="Remove file">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Analysis Button -->
+                    <button class="btn-primary btn-large btn-analyze" id="analyzeBtn" onclick="startAnalysis()"
+                        style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Start Vulnerability Analysis
+                    </button>
+
+                    <!-- Progress Section -->
+                    <div class="progress-section" id="progressSection" style="display: none;">
+                        <div class="progress-header">
+                            <h3>Analysis in Progress</h3>
+                            <span id="progressPercentage">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-status" id="progressStatus">Initializing...</div>
+
+                        <div class="progress-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Packages Scanned</span>
+                                <span class="stat-value" id="packagesScanned">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Vulnerabilities Found</span>
+                                <span class="stat-value stat-critical" id="vulnsFound">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Data Source</span>
+                                <span class="stat-value" id="currentSource">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Results -->
+            <section class="card wizard-step" id="step3">
+                <div class="card-header">
+                    <div class="step-indicator">
+                        <span class="step-number">3</span>
+                        <div class="step-info">
+                            <h2>Vulnerability Report</h2>
+                            <p id="reportSubtitle">Analysis complete</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-secondary btn-small" onclick="exportReport('html')">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Export HTML
+                        </button>
+                        <button class="btn-secondary btn-small" onclick="exportReport('pdf')">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Export PDF
+                        </button>
+                        <button class="btn-primary btn-small" onclick="startNewScan()">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 4V10H7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path
+                                    d="M20.49 9C19.9828 7.56678 19.1209 6.28536 17.9845 5.27542C16.8482 4.26548 15.4745 3.55976 13.9917 3.22426C12.5089 2.88875 10.9652 2.93434 9.50481 3.35677C8.04437 3.77921 6.71475 4.56471 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4353 15.9556 20.2208 14.4952 20.6432C13.0348 21.0657 11.4911 21.1112 10.0083 20.7757C8.52547 20.4402 7.1518 19.7345 6.01547 18.7246C4.87913 17.7146 4.01717 16.4332 3.51 15"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            New Scan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Summary Cards -->
+                    <div class="summary-grid" id="summaryGrid">
+                        <div class="summary-card">
+                            <div class="summary-icon critical">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M10.29 3.86L1.82 18C1.64537 18.3024 1.55296 18.6453 1.55199 18.9945C1.55101 19.3437 1.64151 19.6871 1.81445 19.9905C1.98738 20.2939 2.23675 20.5467 2.53773 20.7239C2.83871 20.9011 3.18082 20.9962 3.53 21H20.47C20.8192 20.9962 21.1613 20.9011 21.4623 20.7239C21.7633 20.5467 22.0126 20.2939 22.1856 19.9905C22.3585 19.6871 22.449 19.3437 22.448 18.9945C22.447 18.6453 22.3546 18.3024 22.18 18L13.71 3.86C13.5317 3.56611 13.2807 3.32312 12.9812 3.15448C12.6817 2.98585 12.3437 2.89725 12 2.89725C11.6563 2.89725 11.3183 2.98585 11.0188 3.15448C10.7193 3.32312 10.4683 3.56611 10.29 3.86Z"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M12 9V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M12 17H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                            <div class="summary-content">
+                                <h3 id="criticalCount">0</h3>
+                                <p>Critical</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon high">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                    <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                    <path d="M12 16H12.01" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div class="summary-content">
+                                <h3 id="highCount">0</h3>
+                                <p>High</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon medium">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                        stroke="currentColor" stroke-width="2" />
+                                    <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div class="summary-content">
+                                <h3 id="mediumCount">0</h3>
+                                <p>Medium</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon low">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                    <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div class="summary-content">
+                                <h3 id="lowCount">0</h3>
+                                <p>Low</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Search -->
+                    <div class="results-toolbar">
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <input type="text" id="searchInput" placeholder="Search vulnerabilities, CVEs, packages..."
+                                oninput="filterResults()">
+                        </div>
+                        <div class="filter-group">
+                            <button class="filter-btn active" data-filter="all"
+                                onclick="filterBySeverity('all')">All</button>
+                            <button class="filter-btn" data-filter="critical"
+                                onclick="filterBySeverity('critical')">Critical</button>
+                            <button class="filter-btn" data-filter="high"
+                                onclick="filterBySeverity('high')">High</button>
+                            <button class="filter-btn" data-filter="medium"
+                                onclick="filterBySeverity('medium')">Medium</button>
+                            <button class="filter-btn" data-filter="low" onclick="filterBySeverity('low')">Low</button>
+                        </div>
+                    </div>
+
+                    <!-- Results Container -->
+                    <div id="resultsContainer"></div>
+
+                    <!-- No Results Message -->
+                    <div class="no-results" id="noResults" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path
+                                d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 2.96086 3.58579 2.58579C3.96086 2.21071 4.46957 2 5 2H16"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <h3>No Vulnerabilities Found</h3>
+                        <p>Great news! Your system appears to be secure based on our analysis.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>
+                    <strong>Ephemeral by Design</strong> • No data stored • No tracking • No cookies
+                    <span class="footer-separator">|</span>
+                    Data sources: <a href="https://msrc.microsoft.com" target="_blank" rel="noopener">MSRC</a>,
+                    <a href="https://osv.dev" target="_blank" rel="noopener">OSV.dev</a>,
+                    <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank"
+                        rel="noopener">CISA KEV</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1135,12 +1135,12 @@ function determinePackageFix(pkg) {
                 ];
             } else {
                 // Third-party app (e.g., Python, Chrome, etc.)
-                instruction = `Update ${pkg.packageName} to the latest version`;
-                // Try to guess a winget ID or just use the name
-                command = `winget upgrade "${pkg.packageName}"`;
+                instruction = `Update ${pkg.packageName} using Windows Package Manager (WinGet)`;
+                command = 'winget upgrade --all';
                 steps = [
-                    'Open PowerShell as Administrator',
-                    `Run: winget upgrade "${pkg.packageName}"`,
+                    'Open PowerShell or Command Prompt',
+                    'Run: winget update (to check for available updates)',
+                    'Run: winget upgrade --all (to upgrade all packages)',
                     'Alternatively, download the latest installer from the vendor website',
                     'Verify the installation'
                 ];

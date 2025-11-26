@@ -347,7 +347,7 @@ async function analyzePackage(pkg, os) {
     try {
         if (os === 'windows') {
             // ═══════════════════════════════════════════════════════
-            // WINDOWS LOOKUP CHAIN: MSRC → OSV.dev → CISA KEV
+            // WINDOWS LOOKUP CHAIN: MSRC → OSV.dev → CISA KEV (strict)
             // ═══════════════════════════════════════════════════════
 
             // STEP 1: Query MSRC (Microsoft CSAF)
@@ -382,9 +382,9 @@ async function analyzePackage(pkg, os) {
                 }
             }
 
-            // STEP 3: Neither MSRC nor OSV.dev have data → Query CISA KEV (last resort)
-            console.log(`[Windows] Step 3/3: No MSRC/OSV data, checking CISA KEV (fallback)...`);
-            const cisaVulns = await queryCISAKEV(pkg);
+            // STEP 3: Neither MSRC nor OSV.dev have data → Query CISA KEV with STRICT matching
+            console.log(`[Windows] Step 3/3: No MSRC/OSV data, checking CISA KEV with strict matching...`);
+            const cisaVulns = await queryCISAKEVStrict(pkg);
 
             if (cisaVulns.length > 0) {
                 console.log(`[Windows] ⚠ CISA KEV found ${cisaVulns.length} known exploited vulnerability(ies)`);
@@ -395,7 +395,7 @@ async function analyzePackage(pkg, os) {
 
         } else {
             // ═══════════════════════════════════════════════════════
-            // LINUX/macOS LOOKUP CHAIN: OSV.dev → CISA KEV
+            // LINUX/macOS LOOKUP CHAIN: OSV.dev → CISA KEV (strict)
             // ═══════════════════════════════════════════════════════
 
             // STEP 1: Query OSV.dev
@@ -414,9 +414,9 @@ async function analyzePackage(pkg, os) {
                 }
             }
 
-            // STEP 2: OSV.dev has no data → Query CISA KEV (fallback)
-            console.log(`[${os}] Step 2/2: No OSV data, checking CISA KEV (fallback)...`);
-            const cisaVulns = await queryCISAKEV(pkg);
+            // STEP 2: OSV.dev has no data → Query CISA KEV with STRICT matching
+            console.log(`[${os}] Step 2/2: No OSV data, checking CISA KEV with strict matching...`);
+            const cisaVulns = await queryCISAKEVStrict(pkg);
 
             if (cisaVulns.length > 0) {
                 console.log(`[${os}] ⚠ CISA KEV found ${cisaVulns.length} known exploited vulnerability(ies)`);
@@ -721,11 +721,11 @@ function extractFixedVersion(affected) {
 }
 
 // ============================================
-// CISA KEV FALLBACK QUERY
+// CISA KEV STRICT MATCHING QUERY
 // ============================================
 let cisaKEVCache = null;
 
-async function queryCISAKEV(pkg) {
+async function queryCISAKEVStrict(pkg) {
     const vulnerabilities = [];
 
     try {
@@ -739,10 +739,46 @@ async function queryCISAKEV(pkg) {
             cisaKEVCache = await response.json();
         }
 
-        // Search for matching vulnerabilities
+        // Extract core product name from package (remove version numbers, architecture, etc.)
+        const coreProductName = extractCoreProductName(pkg.name);
+
+        console.log(`[CISA KEV] Extracted core product: "${coreProductName}" from package: "${pkg.name}"`);
+
+        // Search for matching vulnerabilities with STRICT matching
         const matches = cisaKEVCache.vulnerabilities?.filter(vuln => {
-            const vulnProduct = (vuln.vendorProject + ' ' + vuln.product).toLowerCase();
-            return vulnProduct.includes(pkg.name) || pkg.name.includes(vuln.product?.toLowerCase());
+            const vendor = (vuln.vendorProject || '').toLowerCase().trim();
+            const product = (vuln.product || '').toLowerCase().trim();
+
+            // STRICT MATCHING RULES:
+            // 1. Product name must match as a complete word (not substring)
+            // 2. Vendor should ideally match or be related
+            // 3. Avoid generic terms that cause false positives
+
+            // Create word boundary regex for exact product matching
+            const productRegex = new RegExp(`\\b${escapeRegex(product)}\\b`, 'i');
+            const coreRegex = new RegExp(`\\b${escapeRegex(coreProductName)}\\b`, 'i');
+
+            // Check if the product name matches exactly (word boundaries)
+            const productMatches = productRegex.test(coreProductName) || coreRegex.test(product);
+
+            // Additional validation: Check vendor consistency
+            // If vendor is specified, it should relate to the package
+            const vendorMatches = !vendor ||
+                vendor === 'multiple' ||
+                vendor === 'n/a' ||
+                coreProductName.includes(vendor) ||
+                vendor.includes(coreProductName.split(/[-_]/)[0]);
+
+            // Exclude common false positive patterns
+            const isFalsePositive = isLikelyFalsePositive(coreProductName, product, vendor);
+
+            const isMatch = productMatches && vendorMatches && !isFalsePositive;
+
+            if (isMatch) {
+                console.log(`[CISA KEV] ✓ MATCH: ${vuln.cveID} - Vendor: "${vendor}", Product: "${product}"`);
+            }
+
+            return isMatch;
         }) || [];
 
         matches.forEach(vuln => {
@@ -760,7 +796,9 @@ async function queryCISAKEV(pkg) {
                 cisaData: {
                     knownRansomware: vuln.knownRansomwareCampaignUse === 'Known',
                     dueDate: vuln.dueDate,
-                    requiredAction: vuln.requiredAction
+                    requiredAction: vuln.requiredAction,
+                    vendor: vuln.vendorProject,
+                    product: vuln.product
                 }
             });
         });
@@ -770,6 +808,53 @@ async function queryCISAKEV(pkg) {
     }
 
     return vulnerabilities;
+}
+
+// Helper function to extract core product name from package name
+function extractCoreProductName(packageName) {
+    // Remove common suffixes and prefixes
+    let core = packageName.toLowerCase()
+        .replace(/-(x86|x64|amd64|i386|arm64|64-bit|32-bit)/gi, '') // Remove architecture
+        .replace(/-(core|interpreter|runtime|sdk|framework|library)/gi, '') // Remove type indicators
+        .replace(/\([^)]*\)/g, '') // Remove parenthetical content
+        .replace(/\d+\.\d+[\d.]*/, '') // Remove version numbers
+        .replace(/[-_]+/g, ' ') // Replace separators with spaces
+        .trim();
+
+    // Take the first significant word (usually the product name)
+    const words = core.split(/\s+/).filter(w => w.length > 2);
+    return words[0] || packageName.toLowerCase();
+}
+
+// Helper function to escape special regex characters
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Helper function to detect likely false positives
+function isLikelyFalsePositive(packageCore, cisaProduct, cisaVendor) {
+    // Known false positive patterns
+    const falsePositivePatterns = [
+        // Don't match generic language names to specific products
+        { pkg: 'python', products: ['drupal', 'wordpress', 'joomla', 'php'] },
+        { pkg: 'java', products: ['drupal', 'wordpress', 'joomla', 'php', 'python'] },
+        { pkg: 'php', products: ['drupal', 'wordpress', 'joomla', 'python', 'java'] },
+        { pkg: 'node', products: ['drupal', 'wordpress', 'joomla'] },
+        { pkg: 'ruby', products: ['drupal', 'wordpress', 'joomla'] },
+
+        // Don't match OS/platform names to applications
+        { pkg: 'windows', products: ['linux', 'macos', 'unix'] },
+        { pkg: 'linux', products: ['windows', 'macos'] },
+    ];
+
+    for (const pattern of falsePositivePatterns) {
+        if (packageCore === pattern.pkg && pattern.products.includes(cisaProduct)) {
+            console.log(`[CISA KEV] ✗ FALSE POSITIVE BLOCKED: "${packageCore}" vs "${cisaProduct}"`);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // ============================================
